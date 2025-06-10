@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Todo } from '../../types/Todo';
 import { USER_ID, postTodo } from '../../api/todos';
 import { errorNotification } from '../../utils/errorFunction';
@@ -7,16 +7,18 @@ interface TodoappHeaderProps {
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   todos: Todo[];
   setErrorNotification: (msg: string) => void;
+  inputRef: React.RefObject<HTMLInputElement>;
 }
 
 export const TodoappHeader: React.FC<TodoappHeaderProps> = ({
   setTodos,
   todos,
   setErrorNotification,
+  inputRef,
 }) => {
   const [newTodo, setNewTodo] = useState<string>('');
   const [activeTodo, setActiveTodo] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const everyActive = todos.length > 0 && todos.every(todo => todo.completed);
@@ -25,8 +27,10 @@ export const TodoappHeader: React.FC<TodoappHeaderProps> = ({
   }, [todos]);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (!isLoading && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isLoading]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,28 +41,37 @@ export const TodoappHeader: React.FC<TodoappHeaderProps> = ({
       return;
     }
 
+    setIsLoading(true);
+
     const lastTodoId = Date.now();
 
     const newTodos = {
       userId: USER_ID,
-      title: newTodo,
+      title: newTodo.trim(),
       completed: false,
     };
 
     setTodos([...todos, { ...newTodos, id: lastTodoId, isLoaded: false }]);
-    setNewTodo('');
+
     try {
       const createdTodo = await postTodo(newTodos);
 
+      setTodos(prev =>
+        prev.map(todo =>
+          todo.id === lastTodoId ? { ...createdTodo, isLoaded: true } : todo,
+        ),
+      );
+      setNewTodo('');
+      setIsLoading(false);
       setTimeout(() => {
-        setTodos(prev =>
-          prev.map(todo =>
-            todo.id === lastTodoId ? { ...createdTodo, isLoaded: true } : todo,
-          ),
-        );
-      }, 500);
+        inputRef.current?.focus();
+      }, 0);
     } catch (error) {
-      errorNotification('Failed to add todo', setErrorNotification);
+      setIsLoading(false);
+      errorNotification('Unable to add a todo', setErrorNotification);
+      setTodos(prev => prev.filter(todo => todo.id !== lastTodoId));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,6 +116,7 @@ export const TodoappHeader: React.FC<TodoappHeaderProps> = ({
           value={newTodo}
           onChange={e => setNewTodo(e.target.value)}
           ref={inputRef}
+          disabled={isLoading}
         />
       </form>
     </header>

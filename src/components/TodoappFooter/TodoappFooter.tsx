@@ -9,6 +9,7 @@ interface TodoappFooterProps {
   todos: Todo[];
   setFilterStyle: (style: FilterType) => void;
   handleClearCompletedButton: () => void;
+  inputRef: React.RefObject<HTMLInputElement>;
 }
 
 export const TodoappFooter: React.FC<TodoappFooterProps> = ({
@@ -16,8 +17,10 @@ export const TodoappFooter: React.FC<TodoappFooterProps> = ({
   setFilterStyle,
   handleClearCompletedButton,
 }) => {
-  const todosLength = todos.filter(todo => !todo.completed).length;
-  const todoIsCompleted = todos.some(todo => todo.completed);
+  const todosLength = todos.filter(
+    todo => !todo.completed && todo.isLoaded,
+  ).length;
+  const todoIsCompleted = todos.some(todo => todo.completed && todo.isLoaded);
 
   if (todos.length === 0) {
     return null;

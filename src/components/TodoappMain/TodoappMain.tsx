@@ -7,12 +7,14 @@ interface TodoappMainProps {
   todos: Todo[];
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   setErrorNotification: (msg: string) => void;
+  inputRef: React.RefObject<HTMLInputElement>;
 }
 
 export const TodoappMain: React.FC<TodoappMainProps> = ({
   todos,
   setTodos,
   setErrorNotification,
+  inputRef,
 }) => {
   const handleTodoDelete = async (idTodo: number) => {
     setTodos(prev =>
@@ -23,12 +25,16 @@ export const TodoappMain: React.FC<TodoappMainProps> = ({
 
     try {
       await deleteTodo(idTodo);
-
-      setTimeout(() => {
-        setTodos(prev => prev.filter(todo => todo.id !== idTodo));
-      }, 500);
+      setTodos(prev => prev.filter(todo => todo.id !== idTodo));
+      inputRef.current?.focus();
     } catch {
       errorNotification('Unable to delete a todo', setErrorNotification);
+
+      setTodos(prev =>
+        prev.map(todo =>
+          todo.id === idTodo ? { ...todo, isLoaded: true } : todo,
+        ),
+      );
     }
   };
 

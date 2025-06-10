@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TodoappFooter } from '../TodoappFooter';
 import { TodoappHeader } from '../TodoappHeader';
 import { TodoappMain } from '../TodoappMain';
 import { Todo } from '../../types/Todo';
 import { FilterType } from '../../types/Filter';
-import { getTodos } from '../../api/todos';
+import { deleteTodo, getTodos } from '../../api/todos';
+import { errorNotification } from '../../utils/errorFunction';
 interface TodoappContentProps {
   setErrorNotification: (msg: string) => void;
 }
@@ -14,6 +15,7 @@ export const TodoappContent: React.FC<TodoappContentProps> = ({
 }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filterStyle, setFilterStyle] = useState<FilterType>('all');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getTodos()
@@ -37,8 +39,28 @@ export const TodoappContent: React.FC<TodoappContentProps> = ({
     }
   });
 
-  const handleClearCompletedButton = () => {
-    setTodos(prev => prev.filter(todo => !todo.completed));
+  const handleClearCompletedButton = async () => {
+    const completedTodos = todos.filter(todo => todo.completed);
+
+    setTodos(prev =>
+      prev.map(todo => (todo.completed ? { ...todo, isLoaded: false } : todo)),
+    );
+
+    await Promise.all(
+      completedTodos.map(async todo => {
+        try {
+          await deleteTodo(todo.id);
+          setTodos(prev => prev.filter(t => t.id !== todo.id));
+        } catch {
+          setTodos(prev =>
+            prev.map(t =>
+              t.id === todo.id ? { ...todo, isLoaded: true } : todo,
+            ),
+          );
+          errorNotification('Unable to delete a todo', setErrorNotification);
+        }
+      }),
+    );
   };
 
   return (
@@ -47,18 +69,21 @@ export const TodoappContent: React.FC<TodoappContentProps> = ({
         setTodos={setTodos}
         todos={todos}
         setErrorNotification={setErrorNotification}
+        inputRef={inputRef}
       />
 
       <TodoappMain
         todos={filteredTodos}
         setTodos={setTodos}
         setErrorNotification={setErrorNotification}
+        inputRef={inputRef}
       />
 
       <TodoappFooter
         todos={todos}
         setFilterStyle={setFilterStyle}
         handleClearCompletedButton={handleClearCompletedButton}
+        inputRef={inputRef}
       />
     </div>
   );

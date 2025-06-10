@@ -27,7 +27,7 @@ export const TodoElement: React.FC<TodoElementProps> = ({
   };
 
   const handleEditedTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const trimmedTitle = e.target.value;
+    const trimmedTitle = e.target.value.trim();
 
     setEditedTitle(trimmedTitle);
   };
