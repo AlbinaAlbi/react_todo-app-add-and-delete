@@ -41,26 +41,30 @@ export const TodoappContent: React.FC<TodoappContentProps> = ({
 
   const handleClearCompletedButton = async () => {
     const completedTodos = todos.filter(todo => todo.completed);
+    const uncompletedTodos = todos.filter(todo => !todo.completed);
 
     setTodos(prev =>
       prev.map(todo => (todo.completed ? { ...todo, isLoaded: false } : todo)),
     );
+    
+    const failedToDelete: Todo[] = [];
 
     await Promise.all(
       completedTodos.map(async todo => {
         try {
           await deleteTodo(todo.id);
-          setTodos(prev => prev.filter(t => t.id !== todo.id));
         } catch {
-          setTodos(prev =>
-            prev.map(t =>
-              t.id === todo.id ? { ...todo, isLoaded: true } : todo,
-            ),
-          );
+          failedToDelete.push({ ...todo, isLoaded: true });
           errorNotification('Unable to delete a todo', setErrorNotification);
         }
       }),
     );
+    const updatedTodos = [...uncompletedTodos, ...failedToDelete];
+
+    updatedTodos.sort((a, b) => a.id - b.id);
+
+    setTodos(updatedTodos);
+    inputRef.current?.focus();
   };
 
   return (
