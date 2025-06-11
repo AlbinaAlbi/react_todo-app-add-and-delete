@@ -31,7 +31,7 @@ export const TodoappHeader: React.FC<TodoappHeaderProps> = ({
     if (!isLoading && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isLoading]);
+  }, [isLoading, inputRef]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
