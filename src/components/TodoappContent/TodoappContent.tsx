@@ -14,7 +14,7 @@ export const TodoappContent: React.FC<TodoappContentProps> = ({
   setErrorNotification,
 }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [filterStyle, setFilterStyle] = useState<FilterType>('all');
+  const [filterStyle, setFilterStyle] = useState<FilterType>(FilterType.All);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -29,11 +29,11 @@ export const TodoappContent: React.FC<TodoappContentProps> = ({
 
   const filteredTodos = todos.filter(todo => {
     switch (filterStyle) {
-      case 'active':
+      case FilterType.Active:
         return !todo.completed;
-      case 'completed':
+      case FilterType.Completed:
         return todo.completed;
-      case 'all':
+      case FilterType.All:
       default:
         return true;
     }
@@ -46,7 +46,7 @@ export const TodoappContent: React.FC<TodoappContentProps> = ({
     setTodos(prev =>
       prev.map(todo => (todo.completed ? { ...todo, isLoaded: false } : todo)),
     );
-    
+
     const failedToDelete: Todo[] = [];
 
     await Promise.all(

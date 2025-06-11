@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Todo } from '../../types/Todo';
 import { USER_ID, postTodo } from '../../api/todos';
 import { errorNotification } from '../../utils/errorFunction';
+import classNames from 'classnames';
 
 interface TodoappHeaderProps {
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
@@ -101,7 +102,7 @@ export const TodoappHeader: React.FC<TodoappHeaderProps> = ({
       {todos.length > 0 && (
         <button
           type="button"
-          className={`todoapp__toggle-all ${activeTodo ? 'active' : ''}`}
+          className={classNames('todoapp__toggle-all', { active: activeTodo })}
           data-cy="ToggleAllButton"
           onClick={handleToggleAllActive}
         />
